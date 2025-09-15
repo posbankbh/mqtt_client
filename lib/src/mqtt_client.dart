@@ -478,14 +478,49 @@ class MqttClient {
     if (connectionHandler?.connectionStatus.state != MqttConnectionState.connected) {
       throw ConnectionException(connectionHandler?.connectionStatus.state);
     }
+    try {
+      final pubTopic = PublicationTopic(topic);
+      return publishingManager!.publish(
+        pubTopic,
+        qualityOfService,
+        data,
+        retain,
+      );
+    } on Exception catch (e, stack) {
+      Error.throwWithStackTrace(
+        InvalidTopicException(e.toString(), topic),
+        stack,
+      );
+    }
+  }
 
-    final pubTopic = PublicationTopic(topic);
-    return publishingManager!.publish(
-      pubTopic,
-      qualityOfService,
-      data,
-      retain,
-    );
+  /// Async Publishes a message to the message broker.
+  /// Returns The message identifier assigned to the message.
+  /// Raises InvalidTopicException if the topic supplied violates the
+  /// MQTT topic format rules.
+  Future<int> publishMessageAsync(
+    String topic,
+    MqttQos qualityOfService,
+    typed.Uint8Buffer data, {
+    bool retain = false,
+  }) async {
+    if (connectionHandler?.connectionStatus.state != MqttConnectionState.connected) {
+      throw ConnectionException(connectionHandler?.connectionStatus.state);
+    }
+    try {
+      final pubTopic = PublicationTopic(topic);
+      return await publishingManager!.publishAsync(
+        pubTopic,
+        qualityOfService,
+        data,
+        retain,
+      );
+    } on Exception catch (e, stack) {
+      Error.throwWithStackTrace(
+        InvalidTopicException(e.toString(), topic),
+        stack,
+      );
+    }
   }
 
   /// Unsubscribe from a topic.

@@ -34,43 +34,38 @@ class MqttServerNormalConnection extends MqttServerConnection<Socket> {
     MqttLogger.log('MqttNormalConnection::connect - entered');
     try {
       // Connect and save the socket.
-      Socket.connect(server, port, timeout: socketTimeout)
-          .then((socket) {
-            // Socket options
-            final applied = _applySocketOptions(socket, socketOptions);
-            if (applied) {
-              MqttLogger.log(
-                'MqttNormalConnection::connect - socket options applied',
-              );
-            }
-            client = socket;
-            readWrapper = ReadWrapper();
-            messageStream = MqttByteBuffer(typed.Uint8Buffer());
-            _startListening();
-            completer.complete();
-          })
-          .catchError((e) {
-            if (_isSocketTimeout(e)) {
-              final message =
-                  'MqttNormalConnection::connect - The connection to the message broker '
-                  '{$server}:{$port} could not be made, a socket timeout has occurred';
-              MqttLogger.log(message);
-              completer.complete();
-            } else {
-              onError(e);
-              completer.completeError(e);
-            }
-          });
+      Socket.connect(server, port, timeout: socketTimeout).then((socket) {
+        // Socket options
+        final applied = _applySocketOptions(socket, socketOptions);
+        if (applied) {
+          MqttLogger.log(
+            'MqttNormalConnection::connect - socket options applied',
+          );
+        }
+        client = socket;
+        readWrapper = ReadWrapper();
+        messageStream = MqttByteBuffer(typed.Uint8Buffer());
+        _startListening();
+        completer.complete();
+      }).catchError((e) {
+        if (_isSocketTimeout(e)) {
+          final message = 'MqttNormalConnection::connect - The connection to the message broker '
+              '{$server}:{$port} could not be made, a socket timeout has occurred';
+          MqttLogger.log(message);
+          completer.complete();
+        } else {
+          onError(e);
+          completer.completeError(e);
+        }
+      });
     } on SocketException catch (e, stack) {
-      final message =
-          'MqttNormalConnection::connect - The connection to the message broker '
+      final message = 'MqttNormalConnection::connect - The connection to the message broker '
           '{$server}:{$port} could not be made. Error is ${e.toString()}';
       completer.completeError(e);
       Error.throwWithStackTrace(NoConnectionException(message), stack);
     } on Exception catch (e, stack) {
       completer.completeError(e);
-      final message =
-          'MqttNormalConnection::Connect - The connection to the message '
+      final message = 'MqttNormalConnection::Connect - The connection to the message '
           'broker {$server}:{$port} could not be made.';
       Error.throwWithStackTrace(NoConnectionException(message), stack);
     }
@@ -84,41 +79,36 @@ class MqttServerNormalConnection extends MqttServerConnection<Socket> {
     MqttLogger.log('MqttNormalConnection::connectAuto - entered');
     try {
       // Connect and save the socket.
-      Socket.connect(server, port, timeout: socketTimeout)
-          .then((socket) {
-            // Socket options
-            final applied = _applySocketOptions(socket, socketOptions);
-            if (applied) {
-              MqttLogger.log(
-                'MqttNormalConnection::connectAuto - socket options applied',
-              );
-            }
-            client = socket;
-            _startListening();
-            completer.complete();
-          })
-          .catchError((e) {
-            if (_isSocketTimeout(e)) {
-              final message =
-                  'MqttNormalConnection::connectAuto - The connection to the message broker '
-                  '{$server}:{$port} could not be made, a socket timeout has occurred';
-              MqttLogger.log(message);
-              completer.complete();
-            } else {
-              onError(e);
-              completer.completeError(e);
-            }
-          });
+      Socket.connect(server, port, timeout: socketTimeout).then((socket) {
+        // Socket options
+        final applied = _applySocketOptions(socket, socketOptions);
+        if (applied) {
+          MqttLogger.log(
+            'MqttNormalConnection::connectAuto - socket options applied',
+          );
+        }
+        client = socket;
+        _startListening();
+        completer.complete();
+      }).catchError((e) {
+        if (_isSocketTimeout(e)) {
+          final message = 'MqttNormalConnection::connectAuto - The connection to the message broker '
+              '{$server}:{$port} could not be made, a socket timeout has occurred';
+          MqttLogger.log(message);
+          completer.complete();
+        } else {
+          onError(e);
+          completer.completeError(e);
+        }
+      });
     } on SocketException catch (e, stack) {
-      final message =
-          'MqttNormalConnection::connectAuto - The connection to the message broker '
+      final message = 'MqttNormalConnection::connectAuto - The connection to the message broker '
           '{$server}:{$port} could not be made. Error is ${e.toString()}';
       completer.completeError(e);
       Error.throwWithStackTrace(NoConnectionException(message), stack);
     } on Exception catch (e, stack) {
       completer.completeError(e);
-      final message =
-          'MqttNormalConnection::ConnectAuto - The connection to the message '
+      final message = 'MqttNormalConnection::ConnectAuto - The connection to the message '
           'broker {$server}:{$port} could not be made.';
       Error.throwWithStackTrace(NoConnectionException(message), stack);
     }
@@ -130,6 +120,15 @@ class MqttServerNormalConnection extends MqttServerConnection<Socket> {
   void send(MqttByteBuffer message) {
     final messageBytes = message.read(message.length);
     client?.add(messageBytes.toList());
+  }
+
+  /// Sends the message in the stream to the broker.
+  @override
+  Future<void> sendAsync(MqttByteBuffer message) async {
+    final messageBytes = message.read(message.length);
+    client?.add(messageBytes.toList());
+    await client?.flush();
+    await client?.close();
   }
 
   /// Stops listening the socket immediately.

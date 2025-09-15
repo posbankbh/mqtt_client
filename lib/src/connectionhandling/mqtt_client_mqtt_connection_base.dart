@@ -52,6 +52,9 @@ abstract class MqttConnectionBase<T extends Object> {
   /// Sends the message in the stream to the broker.
   void send(MqttByteBuffer message);
 
+  /// Async Sends the message in the stream to the broker.
+  Future<void> sendAsync(MqttByteBuffer message);
+
   /// Stops listening the socket immediately, must be overridden in connection classes
   void stopListening();
 

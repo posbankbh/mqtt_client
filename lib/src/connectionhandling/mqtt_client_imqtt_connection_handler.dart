@@ -79,6 +79,9 @@ abstract class IMqttConnectionHandler {
   ///  Sends a message to a message broker.
   void sendMessage(MqttMessage message);
 
+  /// Async Sends a message to a message broker.
+  Future sendMessageAsync(MqttMessage message);
+
   /// Unregisters the specified callbacks so it not longer receives
   /// messages of the specified type.
   /// The message type the callback currently receives

@@ -24,4 +24,15 @@ abstract class IPublishingManager {
     MqttQos qualityOfService,
     typed.Uint8Buffer data,
   );
+
+  /// Async Publish a message to the broker on the specified topic.
+  /// The topic to send the message to
+  /// The QOS to use when publishing the message.
+  /// The message to send.
+  /// The message identifier assigned to the message.
+  Future<int> publishAsync(
+    PublicationTopic topic,
+    MqttQos qualityOfService,
+    typed.Uint8Buffer data,
+  );
 }

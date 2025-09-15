@@ -202,6 +202,25 @@ abstract class MqttConnectionHandlerBase implements IMqttConnectionHandler {
     }
   }
 
+  /// Async Sends a message to the broker through the current connection.
+  @override
+  Future sendMessageAsync(MqttMessage? message) async {
+    MqttLogger.log('MqttConnectionHandlerBase::sendMessageAsync - ', message);
+    if ((connectionStatus.state == MqttConnectionState.connected) || (connectionStatus.state == MqttConnectionState.connecting)) {
+      final buff = typed.Uint8Buffer();
+      final stream = MqttByteBuffer(buff);
+      message!.writeTo(stream);
+      stream.seek(0);
+      await connection.sendAsync(stream);
+      // Let any registered people know we're doing a message.
+      for (final callback in sentMessageCallbacks) {
+        callback(message);
+      }
+    } else {
+      MqttLogger.log('MqttConnectionHandlerBase::sendMessage - not connected');
+    }
+  }
+
   /// Closes the connection to the Mqtt message broker.
   @override
   void close() {
