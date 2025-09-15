@@ -161,7 +161,6 @@ class MqttServerSecureConnection extends MqttServerConnection<SecureSocket> {
     final messageBytes = message.read(message.length);
     client?.add(messageBytes.toList());
     await client?.flush();
-    await client?.close();
   }
 
   /// Stops listening the socket immediately.
