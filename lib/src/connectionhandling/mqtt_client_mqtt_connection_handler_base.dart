@@ -18,6 +18,9 @@ abstract class MqttConnectionHandlerBase implements IMqttConnectionHandler {
   @override
   DisconnectCallback? onDisconnected;
 
+  @override
+  Function? onSendError;
+
   /// Auto reconnect callback
   @override
   AutoReconnectCallback? onAutoReconnect;
@@ -72,13 +75,11 @@ abstract class MqttConnectionHandlerBase implements IMqttConnectionHandler {
 
   /// Registry of message processors
   @protected
-  Map<MqttMessageType, MessageCallbackFunction?> messageProcessorRegistry =
-      <MqttMessageType, MessageCallbackFunction?>{};
+  Map<MqttMessageType, MessageCallbackFunction?> messageProcessorRegistry = <MqttMessageType, MessageCallbackFunction?>{};
 
   /// Registry of sent message callbacks
   @protected
-  List<MessageCallbackFunction> sentMessageCallbacks =
-      <MessageCallbackFunction>[];
+  List<MessageCallbackFunction> sentMessageCallbacks = <MessageCallbackFunction>[];
 
   /// We have had an initial connection
   @protected
@@ -157,6 +158,7 @@ abstract class MqttConnectionHandlerBase implements IMqttConnectionHandler {
     autoReconnectInProgress = false;
     if (connectionStatus.state == MqttConnectionState.connected) {
       connection.onDisconnected = onDisconnected;
+      connection.onSendError = onSendError;
       // Fire the re subscribe event.
       if (!clientEventBus!.streamController.isClosed) {
         clientEventBus!.fire(Resubscribe(fromAutoReconnect: true));
@@ -185,8 +187,7 @@ abstract class MqttConnectionHandlerBase implements IMqttConnectionHandler {
   @override
   void sendMessage(MqttMessage? message) {
     MqttLogger.log('MqttConnectionHandlerBase::sendMessage - ', message);
-    if ((connectionStatus.state == MqttConnectionState.connected) ||
-        (connectionStatus.state == MqttConnectionState.connecting)) {
+    if ((connectionStatus.state == MqttConnectionState.connected) || (connectionStatus.state == MqttConnectionState.connecting)) {
       final buff = typed.Uint8Buffer();
       final stream = MqttByteBuffer(buff);
       message!.writeTo(stream);
@@ -280,16 +281,11 @@ abstract class MqttConnectionHandlerBase implements IMqttConnectionHandler {
     try {
       final ackMsg = msg as MqttConnectAckMessage;
       // Drop the connection if our connect request has been rejected.
-      if (ackMsg.variableHeader.returnCode ==
-              MqttConnectReturnCode.brokerUnavailable ||
-          ackMsg.variableHeader.returnCode ==
-              MqttConnectReturnCode.identifierRejected ||
-          ackMsg.variableHeader.returnCode ==
-              MqttConnectReturnCode.unacceptedProtocolVersion ||
-          ackMsg.variableHeader.returnCode ==
-              MqttConnectReturnCode.notAuthorized ||
-          ackMsg.variableHeader.returnCode ==
-              MqttConnectReturnCode.badUsernameOrPassword) {
+      if (ackMsg.variableHeader.returnCode == MqttConnectReturnCode.brokerUnavailable ||
+          ackMsg.variableHeader.returnCode == MqttConnectReturnCode.identifierRejected ||
+          ackMsg.variableHeader.returnCode == MqttConnectReturnCode.unacceptedProtocolVersion ||
+          ackMsg.variableHeader.returnCode == MqttConnectReturnCode.notAuthorized ||
+          ackMsg.variableHeader.returnCode == MqttConnectReturnCode.badUsernameOrPassword) {
         MqttLogger.log(
           'MqttConnectionHandlerBase::_connectAckProcessor '
           'connection rejected',

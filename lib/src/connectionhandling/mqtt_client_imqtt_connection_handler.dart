@@ -18,6 +18,9 @@ abstract class IMqttConnectionHandler {
   /// Unsolicited disconnection callback
   DisconnectCallback? onDisconnected;
 
+  /// Send Error
+  Function? onSendError;
+
   /// Auto reconnect callback
   AutoReconnectCallback? onAutoReconnect;
 

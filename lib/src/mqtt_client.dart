@@ -218,6 +218,9 @@ class MqttClient {
   /// [AutoReconnectCallback] will be called.
   DisconnectCallback? onDisconnected;
 
+  //Example: socket.send() failed
+  Function? onSendError;
+
   /// Client connect callback, called on successful connect
   ConnectCallback? onConnected;
 
@@ -346,6 +349,7 @@ class MqttClient {
       connectionHandler.websocketProtocols = websocketProtocolString;
     }
     connectionHandler.onDisconnected = internalDisconnect;
+    connectionHandler.onSendError = onSendError;
     connectionHandler.onConnected = onConnected;
     connectionHandler.onAutoReconnect = onAutoReconnect;
     connectionHandler.onAutoReconnected = onAutoReconnected;

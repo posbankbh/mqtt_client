@@ -29,6 +29,8 @@ abstract class MqttConnectionBase<T extends Object> {
   @internal
   DisconnectCallback? onDisconnected;
 
+  Function? onSendError;
+
   /// The event bus
   @protected
   events.EventBus? clientEventBus;
@@ -69,6 +71,12 @@ abstract class MqttConnectionBase<T extends Object> {
         'MqttConnectionBase::_onError - calling disconnected callback',
       );
       onDisconnected!();
+    }
+    if (onSendError != null) {
+      MqttLogger.log(
+        'MqttConnectionBase::_onError - calling onSendError callback',
+      );
+      onSendError!();
     }
   }
 

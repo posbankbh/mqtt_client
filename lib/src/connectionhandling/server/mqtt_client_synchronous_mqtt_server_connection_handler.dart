@@ -9,8 +9,7 @@ part of '../../../mqtt_server_client.dart';
 
 /// Connection handler that performs server based connections and disconnections
 /// to the hostname in a synchronous manner.
-class SynchronousMqttServerConnectionHandler
-    extends MqttServerConnectionHandler {
+class SynchronousMqttServerConnectionHandler extends MqttServerConnectionHandler {
   /// Initializes a new instance of the SynchronousMqttConnectionHandler class.
   SynchronousMqttServerConnectionHandler(
     super.clientEventBus, {
@@ -105,6 +104,7 @@ class SynchronousMqttServerConnectionHandler
           );
         }
         connection.onDisconnected = onDisconnected;
+        connection.onSendError = onSendError;
       }
 
       // Connect
@@ -166,8 +166,7 @@ class SynchronousMqttServerConnectionHandler
           }
         }
       }
-    } while (connectionStatus.state != MqttConnectionState.connected &&
-        connectionAttempts < maxConnectionAttempts!);
+    } while (connectionStatus.state != MqttConnectionState.connected && connectionAttempts < maxConnectionAttempts!);
     // If we've failed to handshake with the broker, throw an exception.
     if (connectionStatus.state != MqttConnectionState.connected) {
       if (!autoReconnectInProgress) {
@@ -175,8 +174,7 @@ class SynchronousMqttServerConnectionHandler
           'SynchronousMqttServerConnectionHandler::internalConnect failed',
         );
         if (onFailedConnectionAttempt == null) {
-          if (connectionStatus.returnCode ==
-              MqttConnectReturnCode.noneSpecified) {
+          if (connectionStatus.returnCode == MqttConnectReturnCode.noneSpecified) {
             throw NoConnectionException(
               'The maximum allowed connection attempts '
               '({$maxConnectionAttempts}) were exceeded. '
