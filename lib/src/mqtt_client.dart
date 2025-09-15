@@ -612,6 +612,7 @@ class MqttClient {
   ///
   /// This method will disconnect regardless of the [autoReconnect] state.
   void disconnect() {
+    _autoReconnectTimer?.cancel();
     _disconnect(unsolicited: false);
   }
 
