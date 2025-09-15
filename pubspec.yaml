@@ -3,6 +3,7 @@ description: A server and browser based MQTT client for Dart supporting normal, 
 version: 10.11.1
 repository: https://github.com/shamblett/mqtt_client
 homepage: https://github.com/shamblett/mqtt_client
+publish_to: none
 
 funding:
   - https://www.darticulate.com/#funding
@@ -17,6 +18,10 @@ dependencies:
   crypto: '^3.0.3'
   meta: '^1.9.1'
   characters: '^1.3.0'
+  pausable_timer:
+    git:
+      url: https://github.com/posbankbh/pausable_timer.git
+  synchronized: ^3.0.0+2
 
 dev_dependencies:
   test: '^1.24.0'

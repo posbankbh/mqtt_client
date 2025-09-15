@@ -41,6 +41,8 @@ class MqttClient {
   /// Client identifier
   String clientIdentifier;
 
+  final Lock _autoReconnectlock = Lock();
+
   /// Incorrect instantiation protection
   @protected
   var instantiationCorrect = false;
@@ -397,7 +399,31 @@ class MqttClient {
     // Set keep alive period.
     connectMessage.variableHeader?.keepAlive = keepAlivePeriod;
     connectionMessage = connectMessage;
+
+    //Reconnect timer
+    if (autoReconnect) {
+      _startAutoReconnectTimer();
+    }
+
     return connectionHandler.connect(server, port, connectMessage);
+  }
+
+  PausableTimer? _autoReconnectTimer;
+
+  void _startAutoReconnectTimer() {
+    _autoReconnectTimer?.cancel();
+    _autoReconnectTimer = PausableTimer(const Duration(seconds: 15), () async {
+      try {
+        _autoReconnectTimer!.pause();
+
+        if (connectionStatus!.state == MqttConnectionState.connecting || connectionStatus!.state == MqttConnectionState.disconnecting) {
+          doAutoReconnect();
+        }
+      } finally {
+        _autoReconnectTimer!.resume(doReset: true);
+      }
+    })
+      ..start();
   }
 
   ///  Gets a pre-configured connect message if one has not been
@@ -417,20 +443,22 @@ class MqttClient {
   /// unless the [force] parameter is set to true, otherwise
   /// auto reconnect will try indefinitely to reconnect to the broker.
   void doAutoReconnect({bool force = false}) {
-    if (!autoReconnect) {
-      MqttLogger.log(
-        'MqttClient::doAutoReconnect - auto reconnect is not set, exiting',
-      );
-      return;
-    }
+    _autoReconnectlock.synchronized(() {
+      if (!autoReconnect) {
+        MqttLogger.log(
+          'MqttClient::doAutoReconnect - auto reconnect is not set, exiting',
+        );
+        return;
+      }
 
-    if (connectionStatus!.state != MqttConnectionState.connected || force) {
-      // Fire a manual auto reconnect request.
-      final wasConnected = connectionStatus!.state == MqttConnectionState.connected;
-      clientEventBus!.fire(
-        AutoReconnect(userRequested: true, wasConnected: wasConnected),
-      );
-    }
+      if (connectionStatus!.state != MqttConnectionState.connected || force) {
+        // Fire a manual auto reconnect request.
+        final wasConnected = connectionStatus!.state == MqttConnectionState.connected;
+        clientEventBus!.fire(
+          AutoReconnect(userRequested: true, wasConnected: wasConnected),
+        );
+      }
+    });
   }
 
   /// Initiates a single topic subscription request to the broker.
@@ -595,6 +623,7 @@ class MqttClient {
       'MqttClient::_disconnectOnNoPingResponse - disconnecting, no ping request response for $disconnectOnNoResponsePeriod seconds',
     );
     // Destroy the existing client socket
+    connectionHandler?.connectionStatus.state = MqttConnectionState.disconnecting;
     connectionHandler?.connection.disconnect();
     internalDisconnect();
   }
@@ -607,6 +636,7 @@ class MqttClient {
       'MqttClient::disconnectOnNoMessageSent - disconnecting, no message sent due to exception like socket exception',
     );
     // Destroy the existing client socket
+    connectionHandler?.connectionStatus.state = MqttConnectionState.disconnecting;
     connectionHandler?.connection.disconnect();
     internalDisconnect();
   }

@@ -134,7 +134,9 @@ class MqttServerNormalConnection extends MqttServerConnection<Socket> {
   @override
   void stopListening() {
     for (final listener in listeners) {
-      listener.cancel();
+      try {
+        listener.cancel();
+      } catch (_) {}
     }
 
     listeners.clear();
@@ -143,8 +145,12 @@ class MqttServerNormalConnection extends MqttServerConnection<Socket> {
   /// Closes the socket immediately.
   @override
   void closeClient() {
-    client?.destroy();
-    client?.close();
+    try {
+      client?.destroy();
+    } catch (_) {}
+    try {
+      client?.close();
+    } catch (_) {}
   }
 
   /// Closes and dispose the socket immediately.

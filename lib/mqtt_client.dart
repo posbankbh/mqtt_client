@@ -11,6 +11,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:meta/meta.dart';
+import 'package:pausable_timer/pausable_timer.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:typed_data/typed_data.dart' as typed;
 import 'package:event_bus/event_bus.dart' as events;
 import 'src/observable/observable.dart' as observe;
