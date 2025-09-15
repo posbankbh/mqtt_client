@@ -186,19 +186,30 @@ abstract class MqttConnectionHandlerBase implements IMqttConnectionHandler {
   /// Sends a message to the broker through the current connection.
   @override
   void sendMessage(MqttMessage? message) {
-    MqttLogger.log('MqttConnectionHandlerBase::sendMessage - ', message);
-    if ((connectionStatus.state == MqttConnectionState.connected) || (connectionStatus.state == MqttConnectionState.connecting)) {
-      final buff = typed.Uint8Buffer();
-      final stream = MqttByteBuffer(buff);
-      message!.writeTo(stream);
-      stream.seek(0);
-      connection.send(stream);
-      // Let any registered people know we're doing a message.
-      for (final callback in sentMessageCallbacks) {
-        callback(message);
+    bool doRethrow = true;
+    if (message is MqttDisconnectMessage) {
+      doRethrow = false;
+    }
+
+    try {
+      MqttLogger.log('MqttConnectionHandlerBase::sendMessage - ', message);
+      if ((connectionStatus.state == MqttConnectionState.connected) || (connectionStatus.state == MqttConnectionState.connecting)) {
+        final buff = typed.Uint8Buffer();
+        final stream = MqttByteBuffer(buff);
+        message!.writeTo(stream);
+        stream.seek(0);
+        connection.send(stream);
+        // Let any registered people know we're doing a message.
+        for (final callback in sentMessageCallbacks) {
+          callback(message);
+        }
+      } else {
+        MqttLogger.log('MqttConnectionHandlerBase::sendMessage - not connected');
       }
-    } else {
-      MqttLogger.log('MqttConnectionHandlerBase::sendMessage - not connected');
+    } catch (e) {
+      if (doRethrow) {
+        rethrow;
+      }
     }
   }
 
