@@ -16,11 +16,10 @@ dependencies:
   path: '^1.9.1'
   crypto: '^3.0.6'
   meta: '^1.16.0'
-  web: '0.1.4-beta'
   characters: '^1.4.0'
 
 dev_dependencies:
-  test: '^0.1.4-beta'
+  test: '^1.24.0'
   lints: '^4.0.0'
   build_runner: '^2.4.8'
   build_test: '^2.1.7'
