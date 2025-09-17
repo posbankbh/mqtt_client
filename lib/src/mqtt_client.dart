@@ -41,8 +41,6 @@ class MqttClient {
   /// Client identifier
   String clientIdentifier;
 
-  final Lock _autoReconnectlock = Lock();
-
   /// Incorrect instantiation protection
   @protected
   var instantiationCorrect = false;
@@ -422,7 +420,9 @@ class MqttClient {
         _autoReconnectTimer!.pause();
 
         if (connectionStatus!.state == MqttConnectionState.connecting || connectionStatus!.state == MqttConnectionState.disconnecting) {
-          doAutoReconnect();
+          clientEventBus!.fire(
+            AutoReconnect(userRequested: false),
+          );
         }
       } finally {
         _autoReconnectTimer!.resume(doReset: true);
@@ -448,22 +448,20 @@ class MqttClient {
   /// unless the [force] parameter is set to true, otherwise
   /// auto reconnect will try indefinitely to reconnect to the broker.
   void doAutoReconnect({bool force = false}) {
-    _autoReconnectlock.synchronized(() {
-      if (!autoReconnect) {
-        MqttLogger.log(
-          'MqttClient::doAutoReconnect - auto reconnect is not set, exiting',
-        );
-        return;
-      }
+    if (!autoReconnect) {
+      MqttLogger.log(
+        'MqttClient::doAutoReconnect - auto reconnect is not set, exiting',
+      );
+      return;
+    }
 
-      if (connectionStatus!.state != MqttConnectionState.connected || force) {
-        // Fire a manual auto reconnect request.
-        final wasConnected = connectionStatus!.state == MqttConnectionState.connected;
-        clientEventBus!.fire(
-          AutoReconnect(userRequested: true, wasConnected: wasConnected),
-        );
-      }
-    });
+    if (connectionStatus!.state != MqttConnectionState.connected || force) {
+      // Fire a manual auto reconnect request.
+      final wasConnected = connectionStatus!.state == MqttConnectionState.connected;
+      clientEventBus!.fire(
+        AutoReconnect(userRequested: true, wasConnected: wasConnected),
+      );
+    }
   }
 
   /// Initiates a single topic subscription request to the broker.
