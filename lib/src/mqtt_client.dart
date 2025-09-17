@@ -400,12 +400,17 @@ class MqttClient {
     connectMessage.variableHeader?.keepAlive = keepAlivePeriod;
     connectionMessage = connectMessage;
 
-    //Reconnect timer
-    if (autoReconnect) {
-      _startAutoReconnectTimer();
+    //Connect
+    final result = await connectionHandler.connect(server, port, connectMessage);
+
+    if (result.state == MqttConnectionState.connected) {
+      //Start Reconnect timer
+      if (autoReconnect) {
+        _startAutoReconnectTimer();
+      }
     }
 
-    return connectionHandler.connect(server, port, connectMessage);
+    return result;
   }
 
   PausableTimer? _autoReconnectTimer;
