@@ -21,7 +21,6 @@ dependencies:
   pausable_timer:
     git:
       url: https://github.com/posbankbh/pausable_timer.git
-  synchronized: ^3.0.0+2
 
 dev_dependencies:
   test: '^1.24.0'
