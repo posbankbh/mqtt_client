@@ -156,9 +156,9 @@ abstract class MqttConnectionHandlerBase implements IMqttConnectionHandler {
     );
 
     //Don't start as clean for autoreconnect
-    // if (connectionMessage?.variableHeader != null) {
-    //   connectionMessage!.variableHeader!.connectFlags.cleanStart = false;
-    // }
+    if (connectionMessage?.variableHeader != null) {
+      connectionMessage!.variableHeader!.connectFlags.cleanStart = false;
+    }
 
     connectionStatus = await connect(server!, port!, connectionMessage);
     autoReconnectInProgress = false;
